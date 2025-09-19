@@ -1,9 +1,9 @@
+# TBD -- To Be Done
+# it means it need to be implemented in some time in future :)
+
+
 from abc import ABC, abstractmethod
 from enum import Enum
-
-# class Station(Enum):
-#     Kitchen = "Kitchen"
-#     Bar = "Bar"  
 
 class Role(Enum):
     Waiter = "Waiter"
@@ -30,24 +30,42 @@ class Staff(ABC):
         self.lastName = lastName
         self.role = role
     
-    def takeOrder(order):
-
-
 class Waiter(Staff):
     def __init__(self, firstName, lastName):
         super().__init__(firstName, lastName, role = Role.Waiter)
+        self.orderItems = []
 
-    @classmethod
-    def takeOrder():
-        pass
+     
+    def takeOrder(self):
+        pass # TBD fill self.orderItems
+
+     
+    def getOrderItems(self):
+        return self.orderItems
+    
+     
+    def deliverOrder(self, order):
+        pass # TBD
+
+     
+    def receivePayment(self, order):
+        pass # TBD
 
 class Chef(Staff):
     def __init__(self, firstName, lastName):
         super().__init__(firstName, lastName, role = Role.Chef)
+    
+     
+    def prepareOerder(self, orderItems):
+        pass # TBD
 
 class Bartender(Staff):
     def __init__(self, firstName, lastName):
         super().__init__(firstName, lastName, role = Role.Bartender)
+    
+     
+    def prepareOerder(self, orderItems):
+        pass # TBD
 
 
 # Station -------------------------------------------------------------------
@@ -66,9 +84,9 @@ class Station(ABC):
     def useStorageItems(self, items: list[Ingredient]):
         pass
 
-    # @abstractmethod
-    # def getStaffWaitingForOrders():
-    #     pass
+    @abstractmethod
+    def getStaffWaitingForOrders():
+        pass
 
 class Bar(Station):
     def __init__(self, staffList : list[Staff]):
@@ -89,8 +107,8 @@ class Bar(Station):
     def useShowcaseItem(self, items: list[Ingredient]):
         pass # TBD implementation
 
-    # def getStaffWaitingForOrders(self):
-    #     pass # TBD implementation
+    def getStaffWaitingForOrders(self):
+        return self.staffList[0]
 
 class Kitchen(Station):
     def __init__(self, staffList : list[Staff]):
@@ -104,8 +122,8 @@ class Kitchen(Station):
     def useStorageItems(self, items: list[Ingredient]):
         pass # TBD implementation
 
-    # def getStaffWaitingForOrders(self):
-    #     pass # TBD implementation
+    def getStaffWaitingForOrders(self):
+        return self.staffList[0]
 
     
 # Menu items --------------------------------------------------------------
@@ -132,19 +150,90 @@ class Beverage(OrderItem):
         super().__init__(name, price, ingredients, amount, notes, prepared_by)
         self.prepared_by = prepared_by
 
+# other -------------------------------------
+
+class Restaurant():
+    def __init__(self, kitchenStaff: list[Chef], barStaff: list[Bartender]):
+        self.kitchen = Kitchen(kitchenStaff)
+        self.bar = Bar(barStaff)
+
 class Order:
-    def __init__(self, orderItems: list[OrderItem]):
+    def __init__(self, waiter: Waiter, restaurant: Restaurant):
         self.status = OrderStatus.NEW
-        self.orderItems = orderItems
+        self.orderItems = list()
+        self.totalPrice = 0
+        self.waiter = waiter
+        self.restaurant = restaurant
+    
+     
+    def addOrderItems(self, orderItems: list[OrderItem]):
+        self.orderItems.extend(orderItems)
+
+     
+    def calcTotalPrice(self):
         self.totalPrice = sum(item.price * item.amount for item in self.orderItems)
 
-# class OrderStateMachine():
+     
+    def CreateBill(self):
+        pass # TBD
+
+    # state handlers -------------------------------------------------------------------
+     
+    def createAnOrder(self):
+        if self.status == OrderStatus.NEW:
+            self.waiter.takeOrder()
+            self.addOrderItems(self.waiter.getOrderItems())
+            self.status = OrderStatus.PREPARING
+        else:
+            raise Exception("The order isn't in status NEW!")
+        
+     
+    def prepareOrder(self):
+        if self.status == OrderStatus.PREPARING:
+            # split order between bar and kitchen 
+            orderItemsForKitchen = [item for item in self.orderItems if isinstance(item, Dish)]
+            orderItemsForBar     = [item for item in self.orderItems if isinstance(item, Beverage)]
+            chef = self.restaurant.kitchen.getStaffWaitingForOrders()
+            chef.prepareOerder(orderItemsForKitchen) 
+            bartender = self.restaurant.bar.getStaffWaitingForOrders()
+            bartender.prepareOerder(orderItemsForBar)
+
+            self.status = OrderStatus.READY
+        else:
+            raise Exception("The order isn't in status PREPARING!")
+        
+     
+    def serveOrder(self):
+        if self.status == OrderStatus.READY:
+            self.calcTotalPrice()
+            self.CreateBill()
+            self.waiter.deliverOrder(self)
+            self.status = OrderStatus.SERVED
+        else:
+            raise Exception("The order isn't in status READY!")
+        
+     
+    def payOrder(self):
+        if self.status == OrderStatus.SERVED:
+            self.waiter.receivePayment(self)
+            self.status = OrderStatus.CLOSED
+        else:
+            raise Exception("The order isn't in status SERVED!")
+
 
 if __name__ == "__main__":
     # init a restourant
-    tables = set([item for item in range(10)])
+    kitchenStaff = [Chef("Jhone", "Doe"), Chef("Tom", "Doe")]
+    # barStaff = [Chef("Ana", "Boe"), Chef("Bob", "Boe")]   ----------  test: should raise an exception 
+    barStaff = [Bartender("Ana", "Boe"), Bartender("Bob", "Boe")]
+    restaurant = Restaurant(kitchenStaff, barStaff)
 
+    waiter1 = Waiter("Robert", "Polson")
+    order1 = Order(waiter1, restaurant)
 
-    cher1= Chef("Jhone", "Doe")
-    print(type(cher1))
+    order1.createAnOrder()
+    order1.prepareOrder()
+    order1.serveOrder()
+    order1.payOrder()
+
 
