@@ -37,19 +37,20 @@ class Waiter(Staff):
 
      
     def takeOrder(self):
-        pass # TBD fill self.orderItems
+        print("Waiter: listening what customers want")
 
      
     def getOrderItems(self):
+        print("Waiter: write all in order")
         return self.orderItems
     
      
     def deliverOrder(self, order):
-        pass # TBD
+        print("Waiter: serve the order")
 
      
     def receivePayment(self, order):
-        pass # TBD
+        print("Waiter: get payment")
 
 class Chef(Staff):
     def __init__(self, firstName, lastName):
@@ -57,7 +58,7 @@ class Chef(Staff):
     
      
     def prepareOerder(self, orderItems):
-        pass # TBD
+        print("Chef: I'm cooking dishes now")
 
 class Bartender(Staff):
     def __init__(self, firstName, lastName):
@@ -65,7 +66,7 @@ class Bartender(Staff):
     
      
     def prepareOerder(self, orderItems):
-        pass # TBD
+        print("Bartender: I'm mixing cocktails now")
 
 
 # Station -------------------------------------------------------------------
@@ -164,6 +165,8 @@ class Order:
         self.totalPrice = 0
         self.waiter = waiter
         self.restaurant = restaurant
+        print(f">>>>> Ored status: {self.status}")
+        print()
     
      
     def addOrderItems(self, orderItems: list[OrderItem]):
@@ -184,6 +187,8 @@ class Order:
             self.waiter.takeOrder()
             self.addOrderItems(self.waiter.getOrderItems())
             self.status = OrderStatus.PREPARING
+            print(f">>>>> Ored status: {self.status}")
+            print()
         else:
             raise Exception("The order isn't in status NEW!")
         
@@ -198,7 +203,11 @@ class Order:
             bartender = self.restaurant.bar.getStaffWaitingForOrders()
             bartender.prepareOerder(orderItemsForBar)
 
+            print("The order is ready")
+
             self.status = OrderStatus.READY
+            print(f">>>>> Ored status: {self.status}")
+            print()
         else:
             raise Exception("The order isn't in status PREPARING!")
         
@@ -209,6 +218,8 @@ class Order:
             self.CreateBill()
             self.waiter.deliverOrder(self)
             self.status = OrderStatus.SERVED
+            print(f">>>>> Ored status: {self.status}")
+            print()
         else:
             raise Exception("The order isn't in status READY!")
         
@@ -217,20 +228,27 @@ class Order:
         if self.status == OrderStatus.SERVED:
             self.waiter.receivePayment(self)
             self.status = OrderStatus.CLOSED
+            print(f">>>>> Ored status: {self.status}")
+            print()
         else:
             raise Exception("The order isn't in status SERVED!")
 
 
 if __name__ == "__main__":
     # init a restourant
+    print("Initialization")
     kitchenStaff = [Chef("Jhone", "Doe"), Chef("Tom", "Doe")]
     # barStaff = [Chef("Ana", "Boe"), Chef("Bob", "Boe")]   ----------  test: should raise an exception 
     barStaff = [Bartender("Ana", "Boe"), Bartender("Bob", "Boe")]
     restaurant = Restaurant(kitchenStaff, barStaff)
 
     waiter1 = Waiter("Robert", "Polson")
-    order1 = Order(waiter1, restaurant)
+    
+    print("Initialization finished")
 
+    print()
+    print("Creating new order")
+    order1 = Order(waiter1, restaurant)
     order1.createAnOrder()
     order1.prepareOrder()
     order1.serveOrder()
